@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kota Palangka Raya — Jantung Kalimantan Tengah</title>
+    <meta name="description" content="Jelajahi keindahan, budaya, kuliner, dan perkembangan modern Kota Palangka Raya, ibu kota Kalimantan Tengah.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hijau-hutan': '#2E7D32',
+                        'hijau-hutan-dark': '#1B5E20',
+                        'emas-dayak': '#D4AF37',
+                        'emas-dayak-light': '#F4E4A6',
+                        'coklat-kayu': '#6D4C41',
+                        'coklat-kayu-light': '#8D6E63',
+                        'krem': '#F5E6C8',
+                        'krem-dark': '#E8D5B0',
+                        'hitam-arang': '#1E1E1E',
+                        'hitam-arang-light': '#2D2D2D',
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1E1E1E; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #F4E4A6; }
+        html { scroll-behavior: smooth; }
+        .dayak-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .hero-video-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0;
+        }
+        .hero-video-container::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(30,30,30,0.3) 0%, rgba(30,30,30,0.7) 50%, rgba(30,30,30,0.95) 100%); z-index: 1;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        .floating { animation: float 2s ease-in-out infinite; }
+        .floating-delay-1 { animation-delay: 1s; }
+        .card-hover { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(212, 175, 55, 0.25); }
+        .timeline-line {
+            position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 100%;
+            background: linear-gradient(to bottom, #D4AF37, #2E7D32);
+        }
+        .lightbox { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .lightbox.active { opacity: 1; pointer-events: all; }
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+            background: #D4AF37; transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+        .mobile-menu { transform: translateX(100%); transition: transform 0.3s ease; }
+        .mobile-menu.open { transform: translateX(0); }
+        .leaflet-popup-content-wrapper {
+            background: #1E1E1E; color: #F5E6C8; border-radius: 12px; border: 1px solid #D4AF37;
+        }
+        .leaflet-popup-tip { background: #1E1E1E; }
+        .leaflet-popup-content { margin: 12px 16px; font-family: 'Inter', sans-serif; }
+        .loader {
+            border-top-color: #D4AF37; animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body class="bg-hitam-arang text-krem font-sans overflow-x-hidden">
+    <div id="loader" class="fixed inset-0 z-[9999] bg-hitam-arang flex items-center justify-center transition-opacity duration-500">
+        <div id="loader" class="fixed inset-0 z-[9999] bg-hitam-arang flex items-center justify-center">
+    <div class="flex flex-col items-center">
+        
+        <!-- Loader -->
+        <div class="flex items-end gap-2 h-16">
+            <div class="w-2 h-4 bg-amber-400 rounded animate-bounce"></div>
+            <div class="w-2 h-8 bg-amber-400 rounded animate-bounce delay-100"></div>
+            <div class="w-2 h-12 bg-amber-400 rounded animate-bounce delay-200"></div>
+            <div class="w-2 h-8 bg-amber-400 rounded animate-bounce delay-300"></div>
+            <div class="w-2 h-4 bg-amber-400 rounded animate-bounce delay-500"></div>
+        </div>
+
+        <!-- Tulisan -->
+        <p class="mt-6 text-emas-dayak font-serif text-xl tracking-[0.3em]">
+            MEMUAT...
+        </p>
+
+    </div>
+</div>
+        </div>
+    </div>
+
+    <nav id="navbar" class="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-transparent">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="#beranda" class="flex items-center space-x-3 group">
+                    <div class="w-10 h-10 rounded-full border-2 border-emas-dayak flex items-center justify-center group-hover:bg-emas-dayak transition-colors duration-300">
+                        <span class="text-emas-dayak group-hover:text-hitam-arang font-serif font-bold text-lg transition-colors duration-300">P</span>
+                    </div>
+                    <span class="font-serif text-xl text-krem hidden sm:block">Palangka Raya</span>
+                </a>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#beranda" class="nav-link text-krem hover:text-emas-dayak transition-colors text-sm font-medium uppercase tracking-wider">Beranda</a>
+                    <a href="#sejarah" class="nav-link text-krem hover:text-emas-dayak transition-colors text-sm font-medium uppercase tracking-wider">Sejarah</a>
+                    <a href="#budaya" class="nav-link text-krem hover:text-emas-dayak transition-colors text-sm font-medium uppercase tracking-wider">Budaya</a>
+                    <a href="#kuliner" class="nav-link text-krem hover:text-emas-dayak transition-colors text-sm font-medium uppercase tracking-wider">Kuliner</a>
+                    <a href="#wisata" class="nav-link text-krem hover:text-emas-dayak transition-colors text-sm font-medium uppercase tracking-wider">Wisata</a>
+                    <a href="#modern" class="nav-link text-krem hover:text-emas-dayak transition-colors text-sm font-medium uppercase tracking-wider">Perkembangan</a>
+                    <a href="#peta" class="nav-link text-krem hover:text-emas-dayak transition-colors text-sm font-medium uppercase tracking-wider">Peta</a>
+                </div>
+                <button id="mobile-menu-btn" class="md:hidden text-krem hover:text-emas-dayak transition-colors">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="mobile-menu fixed top-0 right-0 w-80 h-full bg-hitam-arang-light border-l border-emas-dayak/20 z-50 p-8">
+            <button id="close-menu" class="absolute top-6 right-6 text-krem hover:text-emas-dayak">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div class="mt-16 flex flex-col space-y-6">
+                <a href="#beranda" class="text-krem hover:text-emas-dayak text-lg font-serif">Beranda</a>
+                <a href="#sejarah" class="text-krem hover:text-emas-dayak text-lg font-serif">Sejarah</a>
+                <a href="#budaya" class="text-krem hover:text-emas-dayak text-lg font-serif">Budaya</a>
+                <a href="#kuliner" class="text-krem hover:text-emas-dayak text-lg font-serif">Kuliner</a>
+                <a href="#wisata" class="text-krem hover:text-emas-dayak text-lg font-serif">Wisata</a>
+                <a href="#modern" class="text-krem hover:text-emas-dayak text-lg font-serif">Perkembangan</a>
+                <a href="#peta" class="text-krem hover:text-emas-dayak text-lg font-serif">Peta</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="beranda" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="hero-video-container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Bundaran_Besar_Palangka_Raya_%28baru%29.jpg/1280px-Bundaran_Besar_Palangka_Raya_%28baru%29.jpg" alt="Sungai Kahayan Palangka Raya" class="w-full h-full object-cover scale-110" id="hero-bg">
+        </div>
+        <div class="absolute top-20 left-10 w-24 h-24 opacity-20 floating hidden lg:block">
+            <svg viewBox="0 0 100 100" class="w-full h-full" style="fill:none;stroke:#D4AF37;stroke-width:1.5;">
+                <path d="M50 10 L60 40 L90 50 L60 60 L50 90 L40 60 L10 50 L40 40 Z" />
+                <circle cx="50" cy="50" r="20" />
+            </svg>
+        </div>
+        <div class="absolute bottom-32 right-16 w-32 h-32 opacity-15 floating floating-delay-1 hidden lg:block">
+            <svg viewBox="0 0 100 100" class="w-full h-full" style="fill:none;stroke:#D4AF37;stroke-width:1.5;">
+                <path d="M20 20 Q50 5 80 20 Q95 50 80 80 Q50 95 20 80 Q5 50 20 20" />
+                <path d="M35 35 Q50 25 65 35 Q75 50 65 65 Q50 75 35 65 Q25 50 35 35" />
+            </svg>
+        </div>
+        <div class="relative z-10 text-center px-4 max-w-5xl mx-auto">
+            <div class="mb-6 overflow-hidden">
+                <p class="text-emas-dayak text-sm md:text-base uppercase tracking-[0.3em] font-medium hero-subtitle opacity-0 translate-y-8">Selamat Datang di</p>
+            </div>
+            <h1 class="font-serif text-6xl md:text-8xl lg:text-9xl font-bold text-krem mb-6 hero-title opacity-0 translate-y-12 leading-tight">Palangka Raya</h1>
+            <div class="w-24 h-1 bg-emas-dayak mx-auto mb-8 hero-line opacity-0 scale-x-0"></div>
+            <p class="text-lg md:text-2xl text-krem/90 max-w-2xl mx-auto mb-12 font-light hero-desc opacity-0 translate-y-8">Jantung Kalimantan Tengah yang Kaya Budaya, Alam, dan Inovasi</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 hero-cta opacity-0 translate-y-8">
+                <a href="#wisata" class="group relative px-8 py-4 bg-emas-dayak text-hitam-arang font-semibold rounded-full overflow-hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+                    <span class="relative z-10 flex items-center gap-2">Jelajahi Kota<i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i></span>
+                </a>
+                <a href="#peta" class="group px-8 py-4 border-2 border-krem/30 text-krem rounded-full hover:border-emas-dayak hover:text-emas-dayak transition-all duration-300 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>Lihat Peta
+                </a>
+            </div>
+        </div>
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+            <a href="#sejarah" class="text-krem/60 hover:text-emas-dayak transition-colors"><i data-lucide="chevron-down" class="w-8 h-8"></i></a>
+        </div>
+    </section>
+
+    <section id="sejarah" class="relative py-24 md:py-32 bg-hitam-arang dayak-pattern">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 scroll-reveal">
+                <p class="text-emas-dayak text-sm uppercase tracking-[0.3em] mb-4">Mengenang Masa Lalu</p>
+                <h2 class="font-serif text-4xl md:text-6xl font-bold text-krem mb-6">Sejarah Kota</h2>
+                <div class="w-20 h-1 bg-emas-dayak mx-auto"></div>
+            </div>
+            <div class="relative">
+                <div class="timeline-line hidden md:block"></div>
+                <div class="relative mb-16 md:mb-24 scroll-reveal">
+                    <div class="md:flex items-center">
+                        <div class="md:w-1/2 md:pr-12 md:text-right mb-6 md:mb-0">
+                            <div class="bg-hitam-arang-light border border-emas-dayak/20 rounded-2xl p-6 md:p-8 card-hover">
+                                <span class="text-emas-dayak font-serif text-3xl md:text-4xl font-bold">1957</span>
+                                <h3 class="text-krem font-serif text-xl md:text-2xl font-semibold mt-3 mb-3">Berdirinya Palangka Raya</h3>
+                                <p class="text-krem/70 leading-relaxed">Kota Palangka Raya didirikan pada tahun 1957 sebagai ibu kota Provinsi Kalimantan Tengah. Nama "Palangka Raya" berasal dari bahasa Dayak Ngaju yang berarti "Tempat Suci" atau "Tanah Suci", mencerminkan kedudukan kota ini sebagai pusat spiritual dan pemerintahan.</p>
+                            </div>
+                        </div>
+                        <div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-6 h-6 bg-emas-dayak rounded-full border-4 border-hitam-arang z-10 items-center justify-center">
+                            <div class="w-2 h-2 bg-hitam-arang rounded-full"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pl-12">
+                            <div class="relative rounded-2xl overflow-hidden h-64 md:h-80">
+                                <img src="https://asset.kompas.com/crops/pZPRprK9YqR2RC7oGvMufW1KGVk=/0x0:750x500/1200x800/data/photo/2022/02/15/620b56b00698f.jpg" alt="Sejarah Palangka Raya" class="w-full h-full object-cover hover:scale-110 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang/80 to-transparent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative mb-16 md:mb-24 scroll-reveal">
+                    <div class="md:flex items-center flex-row-reverse">
+                        <div class="md:w-1/2 md:pl-12 mb-6 md:mb-0">
+                            <div class="bg-hitam-arang-light border border-emas-dayak/20 rounded-2xl p-6 md:p-8 card-hover">
+                                <span class="text-emas-dayak font-serif text-3xl md:text-4xl font-bold">1957</span>
+                                <h3 class="text-krem font-serif text-xl md:text-2xl font-semibold mt-3 mb-3">Peresmian oleh Presiden Soekarno</h3>
+                                <p class="text-krem/70 leading-relaxed">Presiden Soekarno secara resmi meresmikan Kota Palangka Raya pada 17 Juli 1957. Dalam pidatonya, Bung Karno menjelaskan visi besar untuk menjadikan kota ini sebagai ibu kota yang modern dan representatif bagi Kalimantan Tengah.</p>
+                            </div>
+                        </div>
+                        <div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-6 h-6 bg-emas-dayak rounded-full border-4 border-hitam-arang z-10 items-center justify-center">
+                            <div class="w-2 h-2 bg-hitam-arang rounded-full"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pr-12">
+                            <div class="relative rounded-2xl overflow-hidden h-64 md:h-80">
+                                <img src="https://disparbudpora.palangkaraya.go.id/wp-content/uploads/sites/39/2025/09/1.jpeg">
+                                <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang/80 to-transparent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative mb-16 md:mb-24 scroll-reveal">
+                    <div class="md:flex items-center">
+                        <div class="md:w-1/2 md:pr-12 md:text-right mb-6 md:mb-0">
+                            <div class="bg-hitam-arang-light border border-emas-dayak/20 rounded-2xl p-6 md:p-8 card-hover">
+                                <span class="text-emas-dayak font-serif text-3xl md:text-4xl font-bold">1960-an</span>
+                                <h3 class="text-krem font-serif text-xl md:text-2xl font-semibold mt-3 mb-3">Pusat Pemerintahan Kalteng</h3>
+                                <p class="text-krem/70 leading-relaxed">Palangka Raya berkembang pesat sebagai pusat pemerintahan, pendidikan, dan ekonomi Kalimantan Tengah. Pembangunan infrastruktur dasar dimulai, termasuk jalan utama, gedung pemerintahan, dan fasilitas publik.</p>
+                            </div>
+                        </div>
+                        <div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-6 h-6 bg-emas-dayak rounded-full border-4 border-hitam-arang z-10 items-center justify-center">
+                            <div class="w-2 h-2 bg-hitam-arang rounded-full"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pl-12">
+                            <div class="relative rounded-2xl overflow-hidden h-64 md:h-80">
+                                <img src="https://asset.kompas.com/crops/xbbzbbsMdm7z8SXZBZ1RH56f3RI=/0x0:0x0/1200x800/data/photo/2025/02/05/67a30f5722c56.jpg">
+                                <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang/80 to-transparent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative scroll-reveal">
+                    <div class="md:flex items-center flex-row-reverse">
+                        <div class="md:w-1/2 md:pl-12 mb-6 md:mb-0">
+                            <div class="bg-hitam-arang-light border border-emas-dayak/20 rounded-2xl p-6 md:p-8 card-hover">
+                                <span class="text-emas-dayak font-serif text-3xl md:text-4xl font-bold">2026</span>
+                                <h3 class="text-krem font-serif text-xl md:text-2xl font-semibold mt-3 mb-3">Kota Modern & Smart City</h3>
+                                <p class="text-krem/70 leading-relaxed">Saat ini, Palangka Raya terus berkembang sebagai kota modern dengan visi Smart City. Inovasi layanan publik digital seperti SIMYANDU, pengembangan ekowisata, dan pelestarian budaya Dayak berjalan beriringan untuk masa depan yang berkelanjutan.</p>
+                            </div>
+                        </div>
+                        <div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-6 h-6 bg-emas-dayak rounded-full border-4 border-hitam-arang z-10 items-center justify-center">
+                            <div class="w-2 h-2 bg-hitam-arang rounded-full"></div>
+                        </div>
+                        <div class="md:w-1/2 md:pr-12">
+                            <div class="relative rounded-2xl overflow-hidden h-64 md:h-80">
+                                <img src="https://img.inews.co.id/media/1200/files/inews_new/2022/01/09/09_ant_ikon_palangkaraya__1_.jpg">
+                                <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang/80 to-transparent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="budaya" class="relative py-24 md:py-32 bg-hitam-arang-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 scroll-reveal">
+                <p class="text-emas-dayak text-sm uppercase tracking-[0.3em] mb-4">Warisan Leluhur</p>
+                <h2 class="font-serif text-4xl md:text-6xl font-bold text-krem mb-6">Budaya dan Tradisi</h2>
+                <div class="w-20 h-1 bg-emas-dayak mx-auto mb-6"></div>
+                <p class="text-krem/70 max-w-2xl mx-auto">Keindahan budaya Dayak Ngaju yang telah diwariskan turun-temurun, menjadi identitas dan kebanggaan masyarakat Palangka Raya.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('dayak')">
+                    <div class="h-80 md:h-96">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT61iRJCb-33BKE3DB0nFnCu93mvKEZ3wp8piM1uMR1lzdkELRhJKDsR6Ie&s=10" alt="Suku Dayak Ngaju" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-hitam-arang/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <div class="w-12 h-1 bg-emas-dayak mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                        <h3 class="font-serif text-2xl text-krem mb-2">Suku Dayak Ngaju</h3>
+                        <p class="text-krem/70 text-sm line-clamp-2 group-hover:line-clamp-none transition-all">Suku asli Kalimantan Tengah dengan kekayaan adat istiadat, bahasa, dan kearifan lokal yang mendalam.</p>
+                        <div class="mt-4 flex items-center text-emas-dayak text-sm opacity-0 group-hover:opacity-100 transition-opacity"><span>Selengkapnya</span><i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></div>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('betang')">
+                    <div class="h-80 md:h-96">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Rumah_Betang_Sei_Pasah_180505001.JPG" alt="Rumah Betang" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-hitam-arang/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <div class="w-12 h-1 bg-emas-dayak mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                        <h3 class="font-serif text-2xl text-krem mb-2">Rumah Betang</h3>
+                        <p class="text-krem/70 text-sm line-clamp-2 group-hover:line-clamp-none transition-all">Rumah adat panjang khas Dayak yang menjadi simbol kebersamaan dan gotong royong, dengan panjang mencapai 150 meter.</p>
+                        <div class="mt-4 flex items-center text-emas-dayak text-sm opacity-0 group-hover:opacity-100 transition-opacity"><span>Selengkapnya</span><i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></div>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('manasai')">
+                    <div class="h-80 md:h-96">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWsq5NCIcK0T5DOLNDGicR_IwDgZg3RzUBB5H1TzPwzuVPFbrW6xnBaJvN&s=10" alt="Tari Manasai" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-hitam-arang/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <div class="w-12 h-1 bg-emas-dayak mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                        <h3 class="font-serif text-2xl text-krem mb-2">Tari Manasai</h3>
+                        <p class="text-krem/70 text-sm line-clamp-2 group-hover:line-clamp-none transition-all">Tarian tradisional yang menggambarkan kegembiraan dan syukur masyarakat Dayak, sering ditampilkan dalam acara adat.</p>
+                        <div class="mt-4 flex items-center text-emas-dayak text-sm opacity-0 group-hover:opacity-100 transition-opacity"><span>Selengkapnya</span><i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></div>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('mandau')">
+                    <div class="h-80 md:h-96">
+                        <img src="https://asset.kompas.com/crops/1f4SVWPYufyM_bWjUHqqdEZYCxY=/0x81:1024x764/1200x800/data/photo/2023/12/24/65885759dea0a.jpg" alt="Tari Mandau" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-hitam-arang/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <div class="w-12 h-1 bg-emas-dayak mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                        <h3 class="font-serif text-2xl text-krem mb-2">Tari Mandau</h3>
+                        <p class="text-krem/70 text-sm line-clamp-2 group-hover:line-clamp-none transition-all">Tarian perang yang memperlihatkan keberanian dan keterampilan menggunakan Mandau, senjata tradisional Dayak.</p>
+                        <div class="mt-4 flex items-center text-emas-dayak text-sm opacity-0 group-hover:opacity-100 transition-opacity"><span>Selengkapnya</span><i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></div>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('karungut')">
+                    <div class="h-80 md:h-96">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Grup_Musik_Karungut.JPG/500px-Grup_Musik_Karungut.JPG" alt="Musik Karungut" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-hitam-arang/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <div class="w-12 h-1 bg-emas-dayak mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                        <h3 class="font-serif text-2xl text-krem mb-2">Musik Karungut</h3>
+                        <p class="text-krem/70 text-sm line-clamp-2 group-hover:line-clamp-none transition-all">Seni musik tradisional Dayak menggunakan alat musik petik yang melantunkan syair-syair penuh makna dan pesan moral.</p>
+                        <div class="mt-4 flex items-center text-emas-dayak text-sm opacity-0 group-hover:opacity-100 transition-opacity"><span>Selengkapnya</span><i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></div>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('tiwah')">
+                    <div class="h-80 md:h-96">
+                        <img src="https://mediacenter.palangkaraya.go.id/wp-content/uploads/sites/24/2024/10/Upacara-Tiwah-Masal_4_2-scaled.jpg" alt="Upacara Tiwah" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-hitam-arang/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <div class="w-12 h-1 bg-emas-dayak mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                        <h3 class="font-serif text-2xl text-krem mb-2">Upacara Tiwah</h3>
+                        <p class="text-krem/70 text-sm line-clamp-2 group-hover:line-clamp-none transition-all">Ritual pemakaman adat Dayak Ngaju yang dilaksanakan untuk mengantar arwah leluhur ke alam baka dengan upacara megah.</p>
+                        <div class="mt-4 flex items-center text-emas-dayak text-sm opacity-0 group-hover:opacity-100 transition-opacity"><span>Selengkapnya</span><i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="kuliner" class="relative py-24 md:py-32 bg-hitam-arang dayak-pattern">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 scroll-reveal">
+                <p class="text-emas-dayak text-sm uppercase tracking-[0.3em] mb-4">Cita Rasa Lokal</p>
+                <h2 class="font-serif text-4xl md:text-6xl font-bold text-krem mb-6">Kuliner Khas</h2>
+                <div class="w-20 h-1 bg-emas-dayak mx-auto mb-6"></div>
+                <p class="text-krem/70 max-w-2xl mx-auto">Nikmati kekayaan rasa kuliner tradisional Dayak yang menggugah selera, menggunakan bahan-bahan alami dari hutan Kalimantan.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-hitam-arang-light rounded-2xl overflow-hidden border border-emas-dayak/10 card-hover scroll-reveal group">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://www.indonesia.travel/contentassets/53d245a2cf08494ebb99e741747b7876/kalumpe.jpg" alt="Kalumpe" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute top-4 right-4 bg-emas-dayak text-hitam-arang px-3 py-1 rounded-full text-xs font-bold">Favorit</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-serif text-2xl text-krem mb-2">Kalumpe</h3>
+                        <p class="text-krem/70 text-sm leading-relaxed mb-4">Sayur khas Dayak yang terbuat dari daun ubi tumbuk dengan santan dan bumbu rempah. Memiliki rasa gurih dan tekstur unik yang kaya serat.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-emas-dayak"><i data-lucide="flame" class="w-4 h-4"></i><span class="text-xs">Tradisional</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-hitam-arang-light rounded-2xl overflow-hidden border border-emas-dayak/10 card-hover scroll-reveal group">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://mmc.kalteng.go.id/files/berita/20012018112455.jpg" alt="Wadi" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-serif text-2xl text-krem mb-2">Wadi</h3>
+                        <p class="text-krem/70 text-sm leading-relaxed mb-4">Ikan air tawar yang difermentasi dengan beras dan garam, kemudian dijemur hingga kering. Wadi memiliki rasa asin gurih yang khas dan tahan lama.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-emas-dayak"><i data-lucide="fish" class="w-4 h-4"></i><span class="text-xs">Fermentasi</span></div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-hitam-arang-light rounded-2xl overflow-hidden border border-emas-dayak/10 card-hover scroll-reveal group">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://img-global.cpcdn.com/recipes/fcadf259eab64fb1/680x781cq80/juhu-singkah-umbut-rotan-foto-resep-utama.jpg" alt="Juhu Umbut Rotan" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-serif text-2xl text-krem mb-2">Juhu Umbut Rotan</h3>
+                        <p class="text-krem/70 text-sm leading-relaxed mb-4">Sayur berbahan dasar umbut rotan muda yang diolah dengan santan dan bumbu. Memiliki tekstur renyah dan rasa yang segar.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-emas-dayak"><i data-lucide="leaf" class="w-4 h-4"></i><span class="text-xs">Sayuran</span></div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-hitam-arang-light rounded-2xl overflow-hidden border border-emas-dayak/10 card-hover scroll-reveal group">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://dherdian.wordpress.com/wp-content/uploads/2014/12/ikan-baung.jpg" alt="Ikan Baung Bakar" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute top-4 right-4 bg-hijau-hutan text-krem px-3 py-1 rounded-full text-xs font-bold">Populer</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-serif text-2xl text-krem mb-2">Ikan Baung Bakar</h3>
+                        <p class="text-krem/70 text-sm leading-relaxed mb-4">Ikan baung segar dari Sungai Kahayan yang dibakar dengan bumbu khas Dayak. Dagingnya lembut dan bumbunya meresap sempurna.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-emas-dayak"><i data-lucide="flame" class="w-4 h-4"></i><span class="text-xs">Bakar</span></div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-hitam-arang-light rounded-2xl overflow-hidden border border-emas-dayak/10 card-hover scroll-reveal group">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://indonesiakaya.com/wp-content/uploads/2020/10/kelakai_1200.jpg" alt="Keripik Kelakai" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-serif text-2xl text-krem mb-2">Keripik Kelakai</h3>
+                        <p class="text-krem/70 text-sm leading-relaxed mb-4"> Camilan dari tanaman pakis khas Kalimantan (kelakai) yang digoreng tepung renyah, sangat cocok untuk dijadikan oleh-oleh.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-emas-dayak"><i data-lucide="package" class="w-4 h-4"></i><span class="text-xs">Camilan</span></div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-hitam-arang-light rounded-2xl overflow-hidden border border-emas-dayak/10 card-hover scroll-reveal group">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://www.indonesia.travel/contentassets/e59c5764ce554b12a4b6debb6d7a22d2/fried-jelawat.jpg" alt="Jelawat Goreng" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-serif text-2xl text-krem mb-2">Jelawat Goreng</h3>
+                        <p class="text-krem/70 text-sm leading-relaxed mb-4">Hidangan segar dari ikan mentah yang diasamkan dengan jeruk nipis dan cabai. Sajian khas yang menyegarkan dengan rasa asam pedas.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-emas-dayak"><i data-lucide="droplets" class="w-4 h-4"></i><span class="text-xs">Segar</span></div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="wisata" class="relative py-24 md:py-32 bg-hitam-arang-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 scroll-reveal">
+                <p class="text-emas-dayak text-sm uppercase tracking-[0.3em] mb-4">Pesona Alam & Budaya</p>
+                <h2 class="font-serif text-4xl md:text-6xl font-bold text-krem mb-6">Destinasi Wisata</h2>
+                <div class="w-20 h-1 bg-emas-dayak mx-auto mb-6"></div>
+                <p class="text-krem/70 max-w-2xl mx-auto">Dari hutan tropis yang asri hingga landmark ikonik kota, temukan keindahan alam dan budaya yang memukau di setiap sudut Palangka Raya.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[300px]">
+                <div class="lg:col-span-2 lg:row-span-2 group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('sebangau')">
+                    <img src="https://palangkaraya.go.id/wp-content/uploads/2023/02/PSX_20230214_114536.jpg" alt="Taman Nasional Sebangau" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-transparent to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-hijau-hutan text-krem text-xs px-3 py-1 rounded-full">Alam</span>
+                            <span class="bg-emas-dayak text-hitam-arang text-xs px-3 py-1 rounded-full">Unggulan</span>
+                        </div>
+                        <h3 class="font-serif text-2xl md:text-3xl text-krem mb-2">Taman Nasional Sebangau</h3>
+                        <p class="text-krem/80 text-sm max-w-lg">Habitat orangutan, owa, dan burung langka di hutan gambut terbesar se-Asia Tenggara. Trekking dan susur sungai menanti Anda.</p>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('kahayan')">
+                    <img src="https://disparbudpora.palangkaraya.go.id/wp-content/uploads/sites/39/2022/07/WhatsApp-Image-2022-07-15-at-11.58.40.jpeg" alt="Sungai Kahayan" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-transparent to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="bg-coklat-kayu text-krem text-xs px-3 py-1 rounded-full mb-2 inline-block">Sungai</span>
+                        <h3 class="font-serif text-xl text-krem">Sungai Kahayan</h3>
+                        <p class="text-krem/70 text-xs mt-1">Ikon kehidupan masyarakat Dayak</p>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('jembatan')">
+                    <img src="https://www.kantamedia.com/wp-content/uploads/2022/12/Jembatan-Kahayan-Palangka-Raya-Kalteng-0.jpg" alt="Jembatan Kahayan" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-transparent to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="bg-coklat-kayu text-krem text-xs px-3 py-1 rounded-full mb-2 inline-block">Landmark</span>
+                        <h3 class="font-serif text-xl text-krem">Jembatan Kahayan</h3>
+                        <p class="text-krem/70 text-xs mt-1">Ikon kota yang menghubungkan dua tepi sungai</p>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('museum')">
+                    <img src="https://www.indonesia.travel/contentassets/e0d34752d8504c02a17a9c239dbae747/museum-balanga.jpg" alt="Museum Balanga" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-transparent to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="bg-emas-dayak text-hitam-arang text-xs px-3 py-1 rounded-full mb-2 inline-block">Budaya</span>
+                        <h3 class="font-serif text-xl text-krem">Museum Balanga</h3>
+                        <p class="text-krem/70 text-xs mt-1">Koleksi artefak sejarah & budaya Dayak</p>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('nyaru')">
+                    <img src="https://mmc.kalteng.go.id/files/berita/02092025024837_0.jpg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-transparent to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="bg-hijau-hutan text-krem text-xs px-3 py-1 rounded-full mb-2 inline-block">Konservasi</span>
+                        <h3 class="font-serif text-xl text-krem">Nyaru Menteng</h3>
+                        <p class="text-krem/70 text-xs mt-1">Pusat reintroduksi orangutan</p>
+                    </div>
+                </div>
+                <div class="group relative rounded-2xl overflow-hidden cursor-pointer card-hover scroll-reveal" onclick="openLightbox('masjid')">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/c/cb/Darussalam_Grand_Mosque_Palangka_Raya.jpg" alt="Masjid Raya Darussalam" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-hitam-arang via-transparent to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="bg-emas-dayak text-hitam-arang text-xs px-3 py-1 rounded-full mb-2 inline-block">Religi</span>
+                        <h3 class="font-serif text-xl text-krem">Masjid Raya Darussalam</h3>
+                        <p class="text-krem/70 text-xs mt-1">Ikon spiritual dengan arsitektur megah</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="modern" class="relative py-24 md:py-32 bg-hitam-arang dayak-pattern overflow-hidden">
+        <div class="absolute inset-0 opacity-5">
+            <div class="absolute top-20 left-10 w-64 h-64 bg-emas-dayak rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-hijau-hutan rounded-full blur-3xl"></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-20 scroll-reveal">
+                <p class="text-emas-dayak text-sm uppercase tracking-[0.3em] mb-4">Menuju Masa Depan</p>
+                <h2 class="font-serif text-4xl md:text-6xl font-bold text-krem mb-6">Perkembangan & Potensi Modern</h2>
+                <div class="w-20 h-1 bg-emas-dayak mx-auto mb-6"></div>
+                <p class="text-krem/70 max-w-2xl mx-auto">Palangka Raya terus bertransformasi menjadi kota modern yang tetap menjaga harmoni dengan alam dan budaya.</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-20">
+                <div class="text-center scroll-reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-emas-dayak/10 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="graduation-cap" class="w-8 h-8 text-emas-dayak"></i>
+                    </div>
+                    <div class="counter-value font-serif text-3xl md:text-4xl font-bold text-emas-dayak" data-target="45">0</div>
+                    <p class="text-krem/70 text-sm mt-2">Institusi Pendidikan</p>
+                </div>
+                <div class="text-center scroll-reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-emas-dayak/10 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="road" class="w-8 h-8 text-emas-dayak"></i>
+                    </div>
+                    <div class="counter-value font-serif text-3xl md:text-4xl font-bold text-emas-dayak" data-target="850">0</div>
+                    <p class="text-krem/70 text-sm mt-2">Km Jalan (2024)</p>
+                </div>
+                <div class="text-center scroll-reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-emas-dayak/10 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="map-pin" class="w-8 h-8 text-emas-dayak"></i>
+                    </div>
+                    <div class="counter-value font-serif text-3xl md:text-4xl font-bold text-emas-dayak" data-target="14">0</div>
+                    <p class="text-krem/70 text-sm mt-2">Objek Wisata</p>
+                </div>
+                <div class="text-center scroll-reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-emas-dayak/10 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="trending-up" class="w-8 h-8 text-emas-dayak"></i>
+                    </div>
+                    <div class="counter-value font-serif text-3xl md:text-4xl font-bold text-emas-dayak" data-target="12">0</div>
+                    <p class="text-krem/70 text-sm mt-2">Pertumbuhan Ekonomi (%)</p>
+                </div>
+                <div class="text-center scroll-reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-emas-dayak/10 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="cpu" class="w-8 h-8 text-emas-dayak"></i>
+                    </div>
+                    <div class="counter-value font-serif text-3xl md:text-4xl font-bold text-emas-dayak" data-target="3">0</div>
+                    <p class="text-krem/70 text-sm mt-2">Aplikasi Smart City</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-hitam-arang-light border border-emas-dayak/10 rounded-2xl p-8 card-hover scroll-reveal group">
+                    <div class="w-14 h-14 bg-hijau-hutan/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-hijau-hutan transition-colors">
+                        <i data-lucide="book-open" class="w-7 h-7 text-hijau-hutan group-hover:text-krem transition-colors"></i>
+                    </div>
+                    <h3 class="font-serif text-xl text-krem mb-3">Pendidikan</h3>
+                    <p class="text-krem/70 text-sm leading-relaxed">Pusat pendidikan Kalimantan Tengah dengan Universitas Palangka Raya, politeknik, dan berbagai lembaga riset yang berkembang pesat.</p>
+                </div>
+                <div class="bg-hitam-arang-light border border-emas-dayak/10 rounded-2xl p-8 card-hover scroll-reveal group">
+                    <div class="w-14 h-14 bg-coklat-kayu/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-coklat-kayu transition-colors">
+                        <i data-lucide="building-2" class="w-7 h-7 text-coklat-kayu group-hover:text-krem transition-colors"></i>
+                    </div>
+                    <h3 class="font-serif text-xl text-krem mb-3">Infrastruktur</h3>
+                    <p class="text-krem/70 text-sm leading-relaxed">Pembangunan jalan, jembatan, dan fasilitas publik yang terus diperluas untuk mendukung mobilitas dan kualitas hidup warga.</p>
+                </div>
+                <div class="bg-hitam-arang-light border border-emas-dayak/10 rounded-2xl p-8 card-hover scroll-reveal group">
+                    <div class="w-14 h-14 bg-emas-dayak/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-emas-dayak transition-colors">
+                        <i data-lucide="plane" class="w-7 h-7 text-emas-dayak group-hover:text-hitam-arang transition-colors"></i>
+                    </div>
+                    <h3 class="font-serif text-xl text-krem mb-3">Pariwisata</h3>
+                    <p class="text-krem/70 text-sm leading-relaxed">Pengembangan ekowisata berkelanjutan di Taman Nasional Sebangau, Sungai Kahayan, dan destinasi budaya yang memukau wisatawan.</p>
+                </div>
+                <div class="bg-hitam-arang-light border border-emas-dayak/10 rounded-2xl p-8 card-hover scroll-reveal group">
+                    <div class="w-14 h-14 bg-emas-dayak/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-emas-dayak transition-colors">
+                        <i data-lucide="palette" class="w-7 h-7 text-emas-dayak group-hover:text-hitam-arang transition-colors"></i>
+                    </div>
+                    <h3 class="font-serif text-xl text-krem mb-3">Ekonomi Kreatif</h3>
+                    <p class="text-krem/70 text-sm leading-relaxed">Industri kreatif berbasis budaya Dayak, kerajinan ukiran, dan produk lokal yang semakin berkembang di pasar nasional dan internasional.</p>
+                </div>
+                <div class="bg-hitam-arang-light border border-emas-dayak/10 rounded-2xl p-8 card-hover scroll-reveal group">
+                    <div class="w-14 h-14 bg-hijau-hutan/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-hijau-hutan transition-colors">
+                        <i data-lucide="smartphone" class="w-7 h-7 text-hijau-hutan group-hover:text-krem transition-colors"></i>
+                    </div>
+                    <h3 class="font-serif text-xl text-krem mb-3">Smart City</h3>
+                    <p class="text-krem/70 text-sm leading-relaxed">Implementasi layanan digital SIMYANDU, OSS-RBA, dan SIMBG untuk perizinan online, serta pengembangan infrastruktur digital kota.</p>
+                </div>
+                <div class="bg-hitam-arang-light border border-emas-dayak/10 rounded-2xl p-8 card-hover scroll-reveal group">
+                    <div class="w-14 h-14 bg-hijau-hutan/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-hijau-hutan transition-colors">
+                        <i data-lucide="trees" class="w-7 h-7 text-hijau-hutan group-hover:text-krem transition-colors"></i>
+                    </div>
+                    <h3 class="font-serif text-xl text-krem mb-3">Kelestarian Lingkungan</h3>
+                    <p class="text-krem/70 text-sm leading-relaxed">Komitmen menjaga hutan gambut, konservasi satwa endemik, dan pengembangan kota hijau yang berkelanjutan untuk generasi mendatang.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="peta" class="relative py-24 md:py-32 bg-hitam-arang-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 scroll-reveal">
+                <p class="text-emas-dayak text-sm uppercase tracking-[0.3em] mb-4">Jelajahi Lokasi</p>
+                <h2 class="font-serif text-4xl md:text-6xl font-bold text-krem mb-6">Peta Mini Interaktif</h2>
+                <div class="w-20 h-1 bg-emas-dayak mx-auto mb-6"></div>
+                <p class="text-krem/70 max-w-2xl mx-auto">Klik marker pada peta untuk melihat informasi detail tentang lokasi wisata dan landmark penting di Palangka Raya.</p>
+            </div>
+            <div class="relative rounded-2xl overflow-hidden border-2 border-emas-dayak/20 scroll-reveal">
+                <div id="map" class="w-full h-[500px] md:h-[600px] z-0"></div>
+                <div class="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-hitam-arang/95 backdrop-blur-sm border border-emas-dayak/20 rounded-xl p-4 z-[400]">
+                    <h4 class="font-serif text-lg text-emas-dayak mb-2">Legenda</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-hijau-hutan"></div><span class="text-krem/80">Wisata Alam</span></div>
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-emas-dayak"></div><span class="text-krem/80">Budaya & Sejarah</span></div>
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-coklat-kayu"></div><span class="text-krem/80">Kuliner & Religi</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-hitam-arang border-t border-emas-dayak/10 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="md:col-span-2">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-12 h-12 rounded-full border-2 border-emas-dayak flex items-center justify-center">
+                            <span class="text-emas-dayak font-serif font-bold text-xl">P</span>
+                        </div>
+                        <span class="font-serif text-2xl text-krem">Palangka Raya</span>
+                    </div>
+                    <p class="text-krem/60 leading-relaxed max-w-md mb-6">Kota Palangka Raya — Jantung Kalimantan Tengah yang kaya akan budaya Dayak, keindahan alam, dan inovasi modern. Mari jelajahi keajaiban kota ini bersama-sama.</p>
+                </div>
+                <div>
+                    <h4 class="font-serif text-lg text-krem mb-6">Tautan Cepat</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#sejarah" class="text-krem/60 hover:text-emas-dayak transition-colors text-sm">Sejarah Kota</a></li>
+                        <li><a href="#budaya" class="text-krem/60 hover:text-emas-dayak transition-colors text-sm">Budaya & Tradisi</a></li>
+                        <li><a href="#kuliner" class="text-krem/60 hover:text-emas-dayak transition-colors text-sm">Kuliner Khas</a></li>
+                        <li><a href="#wisata" class="text-krem/60 hover:text-emas-dayak transition-colors text-sm">Destinasi Wisata</a></li>
+                        <li><a href="#modern" class="text-krem/60 hover:text-emas-dayak transition-colors text-sm">Perkembangan Modern</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-serif text-lg text-krem mb-6">Kontak</h4>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3 text-krem/60 text-sm"><i data-lucide="map-pin" class="w-5 h-5 text-emas-dayak flex-shrink-0 mt-0.5"></i><span>lorem ipsum</span></li>
+                        <li class="flex items-center gap-3 text-krem/60 text-sm"><i data-lucide="phone" class="w-5 h-5 text-emas-dayak flex-shrink-0"></i><span>lorem ipsum</span></li>
+                        <li class="flex items-center gap-3 text-krem/60 text-sm"><i data-lucide="mail" class="w-5 h-5 text-emas-dayak flex-shrink-0"></i><span>lorem ipsum</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-emas-dayak/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-krem/40 text-sm text-center md:text-left">&copy; 2026 Kota Palangka Raya. Hak Cipta Dilindungi.</p>
+                >
+            </div>
+        </div>
+    </footer>
+
+    <div id="lightbox" class="lightbox fixed inset-0 z-[100] bg-hitam-arang/95 backdrop-blur-md flex items-center justify-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-krem hover:text-emas-dayak transition-colors z-10"><i data-lucide="x" class="w-8 h-8"></i></button>
+        <div class="max-w-4xl w-full bg-hitam-arang-light rounded-2xl overflow-hidden border border-emas-dayak/20">
+            <div id="lightbox-content" class="p-8 md:p-12"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() { lucide.createIcons(); });
+
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; animateHero(); }, 500);
+            }, 1500);
+        });
+
+        function animateHero() {
+            gsap.to('.hero-subtitle', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
+            gsap.to('.hero-title', { opacity: 1, y: 0, duration: 1.2, delay: 0.3, ease: 'power3.out' });
+            gsap.to('.hero-line', { opacity: 1, scaleX: 1, duration: 0.8, delay: 0.6, ease: 'power3.out' });
+            gsap.to('.hero-desc', { opacity: 1, y: 0, duration: 1, delay: 0.8, ease: 'power3.out' });
+            gsap.to('.hero-cta', { opacity: 1, y: 0, duration: 1, delay: 1, ease: 'power3.out' });
+        }
+
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 100) {
+                navbar.classList.add('bg-hitam-arang/95', 'backdrop-blur-md', 'shadow-lg');
+                navbar.classList.remove('bg-transparent');
+            } else {
+                navbar.classList.remove('bg-hitam-arang/95', 'backdrop-blur-md', 'shadow-lg');
+                navbar.classList.add('bg-transparent');
+            }
+        });
+
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMenuBtn = document.getElementById('close-menu');
+        mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.add('open'));
+        closeMenuBtn.addEventListener('click', () => mobileMenu.classList.remove('open'));
+        mobileMenu.querySelectorAll('a').forEach(link => { link.addEventListener('click', () => mobileMenu.classList.remove('open')); });
+
+        gsap.registerPlugin(ScrollTrigger);
+        document.querySelectorAll('.scroll-reveal').forEach((element) => {
+            gsap.fromTo(element, { opacity: 0, y: 50 },
+                { opacity: 1, y: 0, duration: 0.2, ease: 'power3.out',
+                  scrollTrigger: { trigger: element, start: 'top 85%', toggleActions: 'play none none none' } });
+        });
+
+        gsap.to('#hero-bg', { yPercent: 30, ease: 'none',
+            scrollTrigger: { trigger: '#beranda', start: 'top top', end: 'bottom top', scrub: true } });
+
+        document.querySelectorAll('.counter-value').forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target'));
+            ScrollTrigger.create({ trigger: counter, start: 'top 85%',
+                onEnter: () => { gsap.to(counter, { innerHTML: target, duration: 4, snap: { innerHTML: 1 }, ease: 'power2.out' }); } });
+        });
+
+        const lightboxData = {
+            dayak: { title: 'Suku Dayak Ngaju', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT61iRJCb-33BKE3DB0nFnCu93mvKEZ3wp8piM1uMR1lzdkELRhJKDsR6Ie&s=10',
+                description: 'Suku Dayak Ngaju merupakan suku asli Kalimantan Tengah yang mendiami wilayah sekitar Palangka Raya. Mereka memiliki kekayaan budaya yang mendalam, termasuk bahasa, adat istiadat, dan kearifan lokal yang telah diwariskan turun-temurun. Suku Dayak Ngaju dikenal dengan keahlian mereka dalam seni ukir, tenun, dan musik tradisional. Masyarakat Dayak Ngaju memegang teguh nilai-nilai gotong royong, hormat kepada leluhur, dan harmoni dengan alam.' },
+            betang: { title: 'Rumah Betang', image: 'https://upload.wikimedia.org/wikipedia/commons/1/12/Rumah_Betang_Sei_Pasah_180505001.JPG',
+                description: 'Rumah Betang adalah rumah adat panjang khas suku Dayak yang menjadi simbol kebersamaan dan gotong royong. Dibangun dengan panjang mencapai 150 meter, rumah ini dapat menampung puluhan keluarga dalam satu atap. Rumah Betang memiliki banyak tiang penyangga dan dihiasi dengan ukiran-ukiran khas Dayak yang memiliki makna spiritual. Di Palangka Raya, Rumah Betang menjadi daya tarik wisata budaya yang populer.' },
+            manasai: { title: 'Tari Manasai', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWsq5NCIcK0T5DOLNDGicR_IwDgZg3RzUBB5H1TzPwzuVPFbrW6xnBaJvN&s=10',
+                description: 'Tari Manasai adalah tarian tradisional Dayak yang menggambarkan kegembiraan dan rasa syukur masyarakat. Tarian ini sering ditampilkan dalam acara adat, penyambutan tamu, dan perayaan besar. Para penari mengenakan pakaian adat yang indah dengan hiasan manik-manik dan bulu burung enggang. Gerakan tari Manasai yang anggun dan dinamis mencerminkan kehidupan masyarakat Dayak yang harmonis dengan alam.' },
+            mandau: { title: 'Tari Mandau', image: 'https://asset.kompas.com/crops/1f4SVWPYufyM_bWjUHqqdEZYCxY=/0x81:1024x764/1200x800/data/photo/2023/12/24/65885759dea0a.jpg',
+                description: 'Tari Mandau adalah tarian perang tradisional Dayak yang memperlihatkan keberanian dan keterampilan para prajurit dalam menggunakan Mandau, senjata tradisional suku Dayak. Tarian ini dilakukan dengan gerakan yang kuat dan penuh semangat, diiringi oleh alunan musik tradisional. Tari Mandau bukan hanya pertunjukan seni, tetapi juga simbol perlindungan dan kekuatan spiritual masyarakat Dayak.' },
+            karungut: { title: 'Musik Karungut', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Grup_Musik_Karungut.JPG/500px-Grup_Musik_Karungut.JPG',
+                description: 'Karungut adalah seni musik tradisional Dayak yang menggunakan alat musik petik dari kayu dengan senar yang terbuat dari rotan atau nilon. Musik Karungut melantunkan syair-syair penuh makna yang mengandung pesan moral, cerita sejarah, dan nasihat kehidupan. Seniman Karungut dikenal dengan kemampuannya mengimprovisasi syair sesuai dengan suasana dan pesan yang ingin disampaikan.' },
+            tiwah: { title: 'Upacara Tiwah', image: 'https://mediacenter.palangkaraya.go.id/wp-content/uploads/sites/24/2024/10/Upacara-Tiwah-Masal_4_2-scaled.jpg',
+                description: 'Tiwah adalah upacara pemakaman adat suku Dayak Ngaju yang memiliki nilai spiritual tinggi. Upacara ini dilaksanakan untuk mengantar arwah leluhur ke alam baka (Lewu Tatau). Tiwah merupakan peristiwa besar yang melibatkan seluruh keluarga dan masyarakat, dengan ritual-ritual yang berlangsung selama beberapa hari. Dalam upacara Tiwah, tulang belulang leluhur dipindahkan ke sandung yang dihiasi dengan ukiran indah.' },
+            sebangau: { title: 'Taman Nasional Sebangau', image: 'https://palangkaraya.go.id/wp-content/uploads/2023/02/PSX_20230214_114536.jpg',
+                description: 'Taman Nasional Sebangau adalah hutan gambut terbesar se-Asia Tenggara yang menjadi habitat penting bagi orangutan, owa, dan berbagai burung langka. Terletak di sepanjang Sungai Sebangau, taman nasional ini menawarkan pengalaman ekowisata yang luar biasa dengan trekking hutan, susur sungai menggunakan perahu, dan pengamatan satwa liar. Kawasan ini merupakan hasil konservasi yang berhasil menjaga keaslian ekosistem hutan tropis Kalimantan.' },
+            kahayan: { title: 'Sungai Kahayan', image: 'https://disparbudpora.palangkaraya.go.id/wp-content/uploads/sites/39/2022/07/WhatsApp-Image-2022-07-15-at-11.58.40.jpeg',
+                description: 'Sungai Kahayan adalah urat nadi kehidupan masyarakat Palangka Raya. Dengan panjang sekitar 600 km, sungai ini membelah kota dan menjadi sumber kehidupan bagi masyarakat Dayak. Di sepanjang tepi sungai terdapat berbagai destinasi wisata seperti wisata susur sungai, floating cafe, dan area kuliner. Sungai Kahayan juga menjadi saksi bisu sejarah peradaban Dayak dan simbol kekuatan alam Kalimantan.' },
+            jembatan: { title: 'Jembatan Kahayan', image: 'https://www.kantamedia.com/wp-content/uploads/2022/12/Jembatan-Kahayan-Palangka-Raya-Kalteng-0.jpg',
+                description: 'Jembatan Kahayan adalah landmark ikonik Kota Palangka Raya yang menghubungkan dua tepi Sungai Kahayan. Jembatan ini tidak hanya berfungsi sebagai infrastruktur transportasi, tetapi juga menjadi destinasi wisata populer. Pada malam hari, jembatan ini dihiasi dengan lampu-lampu indah yang memantulkan keindahan di permukaan sungai. Area sekitar jembatan dilengkapi dengan taman, area kuliner, dan spot foto yang menarik.' },
+            museum: { title: 'Museum Balanga', image: 'https://www.indonesia.travel/contentassets/e0d34752d8504c02a17a9c239dbae747/museum-balanga.jpg',
+                description: 'Museum Balanga adalah museum provinsi Kalimantan Tengah yang menyimpan koleksi benda budaya, artefak sejarah, arkeologi, dan geologika. Museum ini memberikan wawasan mendalam tentang kekayaan budaya dan sejarah masyarakat Dayak di Kalimantan. Koleksi museum meliputi ukiran kayu, tenun, perhiasan tradisional, dan benda-benda ritual. Museum Balanga menjadi destinasi wajib bagi wisatawan yang ingin memahami akar budaya Kalimantan Tengah.' },
+            nyaru: { title: 'Nyaru Menteng', image: 'https://mmc.kalteng.go.id/files/berita/02092025024837_0.jpg',
+                description: 'Nyaru Menteng adalah pusat reintroduksi orangutan yang dikelola oleh Yayasan Borneo Orangutan Survival (BOSF). Terletak di Kelurahan Tumbang Tahai, pusat ini menjadi destinasi wisata edukasi yang menarik. Pengunjung dapat melihat proses penangkaran, perawatan, dan persiapan pelepasan orangutan ke alam bebas. Nyaru Menteng juga memiliki jalur trekking yang dikelilingi pemandangan alam yang memukau.' },
+            masjid: { title: 'Masjid Raya Darussalam', image: 'https://upload.wikimedia.org/wikipedia/en/c/cb/Darussalam_Grand_Mosque_Palangka_Raya.jpg',
+                description: 'Masjid Raya Darussalam adalah masjid besar yang menjadi ikon spiritual Kota Palangka Raya. Dengan desain arsitektur yang unik dan dominasi warna putih serta cokelat, masjid ini menampilkan keindahan seni binaan Islam yang harmonis dengan budaya lokal. Menara masjid yang menjulang tinggi dengan warna hijau menjadi ciri khas yang mencolok. Masjid ini tidak hanya menjadi tempat ibadah, tetapi juga destinasi wisata religi yang ramai dikunjungi.' }
+        };
+
+        function openLightbox(key) {
+            const data = lightboxData[key];
+            if (!data) return;
+            const content = document.getElementById('lightbox-content');
+            content.innerHTML = `<div class="flex flex-col md:flex-row gap-8"><div class="md:w-1/2"><img src="${data.image}" alt="${data.title}" class="w-full h-64 md:h-80 object-cover rounded-xl"></div><div class="md:w-1/2"><h3 class="font-serif text-3xl text-emas-dayak mb-4">${data.title}</h3><div class="w-16 h-1 bg-emas-dayak mb-6"></div><p class="text-krem/80 leading-relaxed">${data.description}</p></div></div>`;
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('lightbox').addEventListener('click', function(e) { if (e.target === this) closeLightbox(); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
+
+        function initMap() {
+            const palangkaRaya = [-2.2167, 113.9167];
+            const map = L.map('map', { scrollWheelZoom: false }).setView(palangkaRaya, 12);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+            }).addTo(map);
+
+            const createIcon = (color) => L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid #F5E6C8; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></div>`,
+                iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -12]
+            });
+
+            const locations = [
+                { name: 'Taman Nasional Sebangau', lat: -2.4167, lng: 113.8667, type: 'nature', desc: 'Hutan gambut & habitat orangutan' },
+                { name: 'Sungai Kahayan', lat: -2.2167, lng: 113.9167, type: 'nature', desc: 'Ikon sungai kota Palangka Raya' },
+                { name: 'Jembatan Kahayan', lat: -2.2000, lng: 113.9167, type: 'culture', desc: 'Landmark ikonik kota' },
+                { name: 'Museum Balanga', lat: -2.2167, lng: 113.9000, type: 'culture', desc: 'Museum budaya & sejarah Dayak' },
+                { name: 'Nyaru Menteng', lat: -2.1833, lng: 113.8333, type: 'nature', desc: 'Pusat reintroduksi orangutan' },
+                { name: 'Masjid Raya Darussalam', lat: -2.2100, lng: 113.9200, type: 'religion', desc: 'Ikon spiritual kota' },
+                { name: 'Wisata Flamboyan', lat: -2.2200, lng: 113.9100, type: 'religion', desc: 'Kuliner & sunset di tepi sungai' },
+                { name: 'Bukit Tangkiling', lat: -2.1500, lng: 113.9500, type: 'nature', desc: 'Pemandangan kota dari ketinggian' },
+                { name: 'Taman Wisata Kumkum', lat: -2.2500, lng: 113.9000, type: 'nature', desc: 'Kebun binatang mini & kuliner' },
+                { name: 'Rumah Betang', lat: -2.2100, lng: 113.9150, type: 'culture', desc: 'Rumah adat panjang Dayak' }
+            ];
+
+            const colors = { nature: '#2E7D32', culture: '#D4AF37', religion: '#6D4C41' };
+
+            locations.forEach(loc => {
+                const marker = L.marker([loc.lat, loc.lng], { icon: createIcon(colors[loc.type]) }).addTo(map);
+                marker.bindPopup(`<div style="min-width: 200px;"><h4 style="font-family: 'Playfair Display', serif; font-size: 16px; color: #D4AF37; margin-bottom: 4px;">${loc.name}</h4><p style="color: #F5E6C8; font-size: 13px; margin: 0;">${loc.desc}</p></div>`);
+            });
+        }
+
+        setTimeout(initMap, 100);
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => { if (window.pageYOffset >= section.offsetTop - 200) current = section.getAttribute('id'); });
+            navLinks.forEach(link => { link.classList.remove('active'); if (link.getAttribute('href') === '#' + current) link.classList.add('active'); });
+        });
+    </script>
+</body>
+</html>
